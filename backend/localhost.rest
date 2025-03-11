@@ -1,0 +1,27 @@
+@hostname = localhost
+@port = 8000
+@host = http://{{hostname}}:{{port}}/api
+
+POST {{host}}/users/
+
+{
+    "username": "Hai Chu2",
+    "email": "hai.d.chu@tuni.fi",
+    "password": "test@haichu2"
+}
+
+###
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+    "email":"hai.chu@tuni.fi",
+    "password":"test@haichu"
+}
+
+###
+GET {{host}}/users/67b4898ca6ccd9ebda93a110
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YjQ4OThjYTZjY2Q5ZWJkYTkzYTExMCIsImVtYWlsIjoiaGFpLmNodUB0dW5pLmZpIiwiZXhwIjoxNzM5ODkxMzcwfQ.TAI3G799_AtNTWSYNG5dZwG1oGVYbib2GQwOUMxUsWw
+
+###
+DELETE {{host}}/users/67b3a691df42acb4b0ee2640
