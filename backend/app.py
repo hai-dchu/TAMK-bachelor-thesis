@@ -129,7 +129,7 @@ async def hello_world():
 async def offer(offer: dict):
     try:
         iceServers = [
-            RTCIceServer(url="stun:stun.relay.metered.ca:80"),
+            RTCIceServer(urls="stun:stun.relay.metered.ca:80"),
             RTCIceServer(
                 urls="turn:global.relay.metered.ca:80",
                 username="3e1062646b1d379aae1703ee",
