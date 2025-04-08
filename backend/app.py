@@ -4,7 +4,7 @@ import cv2
 # import numpy as np
 import av
 import asyncio
-from aiortc import RTCPeerConnection, RTCSessionDescription, MediaStreamTrack
+from aiortc import RTCPeerConnection, RTCSessionDescription, MediaStreamTrack, RTCConfiguration, RTCIceServer
 from ultralytics import YOLO
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
@@ -128,7 +128,36 @@ async def hello_world():
 @app.post("/api/pose")
 async def offer(offer: dict):
     try:
-        pc = RTCPeerConnection()
+        iceServers = [
+            RTCIceServer(url="stun:stun.relay.metered.ca:80"),
+            RTCIceServer(
+                url="turn:global.relay.metered.ca:80",
+                username="3e1062646b1d379aae1703ee",
+                credential="VQtqDLm0SITNhgQ2"
+            ),
+            RTCIceServer(
+                urls="turn:global.relay.metered.ca:80",
+                username="3e1062646b1d379aae1703ee",
+                credential="VQtqDLm0SITNhgQ2",
+            ),
+            RTCIceServer(
+                urls="turn:global.relay.metered.ca:80?transport=tcp",
+                username="3e1062646b1d379aae1703ee",
+                credential="VQtqDLm0SITNhgQ2",
+            ),
+            RTCIceServer(
+                urls="turn:global.relay.metered.ca:443",
+                username="3e1062646b1d379aae1703ee",
+                credential="VQtqDLm0SITNhgQ2",
+            ),
+            RTCIceServer(
+                urls="turns:global.relay.metered.ca:443?transport=tcp",
+                username="3e1062646b1d379aae1703ee",
+                credential="VQtqDLm0SITNhgQ2",
+            ),
+        ]
+        config = RTCConfiguration(iceServers=iceServers)
+        pc = RTCPeerConnection(configuration=config)
         pcs.add(pc)
 
         @pc.on("track")
