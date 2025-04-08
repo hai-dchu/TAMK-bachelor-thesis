@@ -83,13 +83,13 @@ const PoseEstimation = () => {
 				ref={webcamRef}
 				autoPlay
 				playsInline
-				style={{ width: "640px", height: "480ox" }}
+				style={{ width: "640px", height: "480px" }}
 			/>
 			<video
 				ref={videoRef}
 				autoPlay
 				playsInline
-				style={{ width: "640px", height: "480ox" }}
+				style={{ width: "640px", height: "480px" }}
 			/>
 		</div>
 	);
