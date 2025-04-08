@@ -1,3 +1,4 @@
+import * as process from "process";
 import { useState, useEffect } from "react";
 
 import "./App.css";

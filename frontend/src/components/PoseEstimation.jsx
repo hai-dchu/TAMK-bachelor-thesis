@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import SimplePeer from "simple-peer";
+import SimplePeer from "simple-peer/simplepeer.min.js";
 import { Stream } from "readable-stream";
 
 import "./PoseEstimation.css";
-import Webcam from "react-webcam";
+import { config } from "process";
+// import Webcam from "react-webcam";
 
 window.ReadableStream = window.ReadableStream || Stream.Readable;
 window.DuplexStream = window.DuplexStream || Stream.Duplex;
@@ -23,8 +24,19 @@ const PoseEstimation = () => {
 				initiator: true,
 				trickle: false,
 				stream,
+				config: {
+					iceServers: [
+						{ urls: 'stun:stun.l.google.com:19302' }, // ok
+						// {
+						// 	urls: 'turn:your.turnserver.com:3478',
+						// 	username: 'user',
+						// 	credential: 'pass'
+						// }
+					]
+				}
 			});
 			p.on("signal", async (data) => {
+				console.log("SIGNAL", data);
 				const response = await fetch(`${import.meta.env.VITE_BASE_URL}/pose`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
@@ -41,6 +53,15 @@ const PoseEstimation = () => {
 					videoRef.current.srcObject = remoteStream;
 				}
 			});
+
+			p.on("error", (err) => {
+				console.log("Error", err);
+			});
+
+			p.on('iceStateChange', (state) => {
+				console.log('ICE state changed:', state);
+				}
+			);
 
 			setPeer(p);
 		};
