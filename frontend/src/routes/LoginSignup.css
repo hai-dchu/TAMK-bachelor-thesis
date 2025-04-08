@@ -1,0 +1,25 @@
+.input-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.input-box {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    flex-grow: 1;
+}
+
+.button-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loginsignup-container {
+    border: 1px solid black;
+    border-radius: 10px;
+    padding: 10px;
+}
