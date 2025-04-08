@@ -131,7 +131,7 @@ async def offer(offer: dict):
         iceServers = [
             RTCIceServer(url="stun:stun.relay.metered.ca:80"),
             RTCIceServer(
-                url="turn:global.relay.metered.ca:80",
+                urls="turn:global.relay.metered.ca:80",
                 username="3e1062646b1d379aae1703ee",
                 credential="VQtqDLm0SITNhgQ2"
             ),
