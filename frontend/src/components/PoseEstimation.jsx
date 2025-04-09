@@ -25,31 +25,31 @@ const PoseEstimation = () => {
 				trickle: false,
 				stream,
 				config: {
-					iceServers: [
-						{
-						  urls: "stun:stun.relay.metered.ca:80",
-						},
-						{
-						  urls: "turn:global.relay.metered.ca:80",
-						  username: "3e1062646b1d379aae1703ee",
-						  credential: "VQtqDLm0SITNhgQ2",
-						},
-						{
-						  urls: "turn:global.relay.metered.ca:80?transport=tcp",
-						  username: "3e1062646b1d379aae1703ee",
-						  credential: "VQtqDLm0SITNhgQ2",
-						},
-						{
-						  urls: "turn:global.relay.metered.ca:443",
-						  username: "3e1062646b1d379aae1703ee",
-						  credential: "VQtqDLm0SITNhgQ2",
-						},
-						{
-						  urls: "turns:global.relay.metered.ca:443?transport=tcp",
-						  username: "3e1062646b1d379aae1703ee",
-						  credential: "VQtqDLm0SITNhgQ2",
-						},
-					],
+					// iceServers: [
+					// 	{
+					// 	  urls: "stun:stun.relay.metered.ca:80",
+					// 	},
+					// 	{
+					// 	  urls: "turn:global.relay.metered.ca:80",
+					// 	  username: "3e1062646b1d379aae1703ee",
+					// 	  credential: "VQtqDLm0SITNhgQ2",
+					// 	},
+					// 	{
+					// 	  urls: "turn:global.relay.metered.ca:80?transport=tcp",
+					// 	  username: "3e1062646b1d379aae1703ee",
+					// 	  credential: "VQtqDLm0SITNhgQ2",
+					// 	},
+					// 	{
+					// 	  urls: "turn:global.relay.metered.ca:443",
+					// 	  username: "3e1062646b1d379aae1703ee",
+					// 	  credential: "VQtqDLm0SITNhgQ2",
+					// 	},
+					// 	{
+					// 	  urls: "turns:global.relay.metered.ca:443?transport=tcp",
+					// 	  username: "3e1062646b1d379aae1703ee",
+					// 	  credential: "VQtqDLm0SITNhgQ2",
+					// 	},
+					// ],
 				}
 			});
 			p.on("signal", async (data) => {
