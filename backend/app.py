@@ -1,8 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from flask import Flask, request, jsonify
-from flask_sockets import Sockets
+# from flask import Flask, request, jsonify
+# from flask_sockets import Sockets
 
 # app = Flask(__name__)
 # sockets = Sockets(app)
@@ -18,15 +18,15 @@ app.add_middleware(
 
 from aiortc import RTCPeerConnection, MediaStreamTrack
 
-@app.route('/api/pose', methods=['POST'])
-def handle_offer():
+@app.post('/api/pose')
+def handle_offer(request: Request):
     offer = request.json['sdp']
     pc = RTCPeerConnection()
     pc.setRemoteDescription(offer)
     # Create an answer
     answer = pc.createAnswer()
     pc.setLocalDescription(answer)
-    return jsonify({'sdp': pc.localDescription.sdp})
+    return {'sdp': pc.localDescription.sdp}
 
 
 # @sockets.route('/websocket')
@@ -36,4 +36,5 @@ def handle_offer():
 #         ws.send(message)  # Echo the websocket message back to the client
 
 if __name__ == "__main__":
-    app.run()
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
