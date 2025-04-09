@@ -1,6 +1,18 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from aiortc import RTCPeerConnection, MediaStreamTrack, RTCSessionDescription
+import asyncio
+from ultralytics import YOLO
+import av
+import cv2
+
+model = YOLO("yolo11n-pose.pt")
+test_img = cv2.imread('./test.jpg') # np.zeros((640, 480, 3), dtype=np.uint8)  # Empty black image
+test_result = model(test_img)
+if test_result:
+    print("YOLO model loaded successfully!")
+else:
+    print("Warning: YOLO model failed to load!")
 
 class PoseRecTrack(MediaStreamTrack):
     kind = 'video'
@@ -9,9 +21,80 @@ class PoseRecTrack(MediaStreamTrack):
         super().__init__()
         self.track = track
 
+    # async def recv(self):
+    #     frame = await self.track.recv()
+    #     return frame
+
     async def recv(self):
         frame = await self.track.recv()
-        return frame
+        img = frame.to_ndarray(format="bgr24")
+
+        self.frame_count += 1
+
+        is_left_ear_in = False
+        is_right_ear_in = False
+        is_left_shoulder_in = False
+        is_right_shoulder_in = False
+        is_left_elbow_in = False
+        is_right_elbow_in = False
+
+        processed_img = img
+        if self.frame_count % self.frame_rate == 0:
+            self.frame_count = 0
+            feed = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+            results = model(feed, verbose=False)
+            keypoints = results[0].keypoints.xy.cpu().numpy() if results[0].keypoints else []
+
+        for kp in keypoints:
+            if len(kp):
+                is_left_ear_in = not (kp[3][0] == 0 and kp[3][1] == 0)
+                is_right_ear_in = not (kp[4][0] == 0 and kp[4][1] == 0)
+                is_left_shoulder_in = not (kp[5][0] == 0 and kp[5][1] == 0)
+                is_right_shoulder_in = not (kp[6][0] == 0 and kp[6][1] == 0)
+                is_left_elbow_in = not (kp[7][0] == 0 and kp[7][1] == 0)
+                is_right_elbow_in = not (kp[8][0] == 0 and kp[8][1] == 0)
+            for idx in range(len(kp)):            
+                if idx is not None or idx in [5,6,7,8,9,10]:
+                    x,y = kp[idx]
+                    processed_img = cv2.circle(processed_img, (int(x), int(y)), 5, (0, 255, 0), -1)
+
+
+        if is_left_ear_in and is_left_shoulder_in:
+            color = (0,0,255)
+            x1, y1 = kp[3]
+            x2, y2 = kp[5]
+            upleft = (int(x2), int(y1-100))
+            downright = (int(x2+100), int(y1))
+            if is_left_elbow_in:
+                x_elbow, y_elbow = kp[7]
+                if upleft[0] < x_elbow < downright[0] and upleft[1] < y_elbow < downright[1]: # elbow inside square
+                    color = (0,255,0)
+            processed_img = cv2.rectangle(processed_img, upleft, downright, color, 2)
+
+
+        if is_right_ear_in and is_right_shoulder_in:
+            color = (0,0,255)
+            x1, y1 = kp[4]
+            x2, y2 = kp[6]
+            upleft = (int(x2-100), int(y1-100))
+            downright = (int(x2), int(y1))
+            if is_right_elbow_in:
+                x_elbow, y_elbow = kp[8]
+                if upleft[0] < x_elbow < downright[0] and upleft[1] < y_elbow < downright[1]: # elbow inside square
+                    color = (0,255,0)
+            processed_img = cv2.rectangle(processed_img, upleft, downright, color, 2)
+
+        processed_img = cv2.flip(processed_img, 1)
+
+        # Encode frame back
+        new_frame = av.VideoFrame.from_ndarray(processed_img, format="bgr24")
+
+        # Sync timestamps (important for WebRTC)
+        new_frame.pts = frame.pts
+        new_frame.time_base = frame.time_base
+
+        return new_frame
 
 app = FastAPI()
 app.add_middleware(
@@ -32,7 +115,6 @@ async def handle_offer(offer: dict):
     # offer = request.json['sdp']
     try:
         pc = RTCPeerConnection()
-        # processcor = PoseRec()
 
         @pc.on('track')
         def on_track(track):
@@ -45,6 +127,10 @@ async def handle_offer(offer: dict):
         # Create an answer
         answer = await pc.createAnswer()
         await pc.setLocalDescription(answer)
+
+        while pc.iceGatheringState != "complete":
+            await asyncio.sleep(0.1)
+        
         return {"sdp": pc.localDescription.sdp, "type": pc.localDescription.type}
     except Exception as e:
         print('error', e)
