@@ -1,11 +1,17 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from aiortc import RTCPeerConnection, MediaStreamTrack, RTCSessionDescription
 
-# from flask import Flask, request, jsonify
-# from flask_sockets import Sockets
+class PoseRecTrack(MediaStreamTrack):
+    kind = 'video'
 
-# app = Flask(__name__)
-# sockets = Sockets(app)
+    def __init__(self, track):
+        super().__init__()
+        self.track = track
+
+    async def recv(self):
+        frame = await self.track.recv()
+        return frame
 
 app = FastAPI()
 app.add_middleware(
@@ -16,24 +22,33 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-from aiortc import RTCPeerConnection, MediaStreamTrack
+
+@app.get('/api')
+def default_endpoint():
+    return {'message': 'default endpoint for haichu thesis backend'}
 
 @app.post('/api/pose')
-def handle_offer(request: Request):
-    offer = request.json['sdp']
-    pc = RTCPeerConnection()
-    pc.setRemoteDescription(offer)
-    # Create an answer
-    answer = pc.createAnswer()
-    pc.setLocalDescription(answer)
-    return {'sdp': pc.localDescription.sdp}
+async def handle_offer(offer: dict):
+    # offer = request.json['sdp']
+    try:
+        pc = RTCPeerConnection()
+        # processcor = PoseRec()
 
+        @pc.on('track')
+        def on_track(track):
+            if track.kind == 'video':
+                processed_track = PoseRecTrack(track)
+                pc.addTrack(processed_track)
 
-# @sockets.route('/websocket')
-# def echo_socket(ws):
-#     while not ws.closed:
-#         message = ws.receive()
-#         ws.send(message)  # Echo the websocket message back to the client
+        remote_desc = RTCSessionDescription(sdp=offer['sdp'], type=offer['type'])
+        await pc.setRemoteDescription(remote_desc)
+        # Create an answer
+        answer = await pc.createAnswer()
+        await pc.setLocalDescription(answer)
+        return {"sdp": pc.localDescription.sdp, "type": pc.localDescription.type}
+    except Exception as e:
+        print('error', e)
+        return {'error': e}
 
 if __name__ == "__main__":
     import uvicorn

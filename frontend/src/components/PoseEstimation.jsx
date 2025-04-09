@@ -12,98 +12,72 @@ const PoseEstimation = () => {
 	const videoRef = useRef(null);
 	const [peer, setPeer] = useState(null);
 
-	const pc = new RTCPeerConnection();
+	// const pc = new RTCPeerConnection();
 
-	pc.ontrack = event => {
-		if (event.streams && event.streams[0]) {
-			videoRef.current.srcObject = event.streams[0];
-		}
-	};
+	// pc.ontrack = event => {
+	// 	if (event.streams && event.streams[0]) {
+	// 		videoRef.current.srcObject = event.streams[0];
+	// 	}
+	// };
 
-	function startConnection() {
-		navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-			.then(stream => {
-				videoRef.current.srcObject = stream;
-				stream.getTracks().forEach(track => pc.addTrack(track, stream));
+	// function startConnection() {
+	// 	navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+	// 		.then(stream => {
+	// 			videoRef.current.srcObject = stream;
+	// 			stream.getTracks().forEach(track => pc.addTrack(track, stream));
+	// 		});
+	// 	// Signaling code to exchange offers/answers and candidates
+	// }
+
+	useEffect(() => {
+		const startWebRTC = async () => {
+			const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+
+			if (webcamRef.current) webcamRef.current.srcObject = stream;
+
+
+			const p = new SimplePeer({
+				initiator: true,
+				trickle: false,
+				stream: stream,
 			});
-		// Signaling code to exchange offers/answers and candidates
-	}
 
-	// useEffect(() => {
-	// 	const startWebRTC = async () => {
-	// 		const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+			p.on("signal", async (data) => {
+				console.log("SIGNAL", data);
+				const response = await fetch(`${import.meta.env.VITE_BASE_URL}/pose`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(data),
+				});
+				const answer = await response.json();
+				console.log(answer);
 
-	// 		if (webcamRef.current) webcamRef.current.srcObject = stream;
+				p.signal(answer);
+			});
 
+			p.on("stream", (remoteStream) => {
+				if (videoRef.current) {
+					videoRef.current.srcObject = remoteStream;
+				}
+			});
 
-	// 		const p = new SimplePeer({
-	// 			initiator: true,
-	// 			trickle: false,
-	// 			stream: stream,
-	// 			// config: {
-	// 				// iceServers: [
-	// 				// 	{
-	// 				// 	  urls: "stun:stun.relay.metered.ca:80",
-	// 				// 	},
-	// 				// 	{
-	// 				// 	  urls: "turn:global.relay.metered.ca:80",
-	// 				// 	  username: "3e1062646b1d379aae1703ee",
-	// 				// 	  credential: "VQtqDLm0SITNhgQ2",
-	// 				// 	},
-	// 				// 	{
-	// 				// 	  urls: "turn:global.relay.metered.ca:80?transport=tcp",
-	// 				// 	  username: "3e1062646b1d379aae1703ee",
-	// 				// 	  credential: "VQtqDLm0SITNhgQ2",
-	// 				// 	},
-	// 				// 	{
-	// 				// 	  urls: "turn:global.relay.metered.ca:443",
-	// 				// 	  username: "3e1062646b1d379aae1703ee",
-	// 				// 	  credential: "VQtqDLm0SITNhgQ2",
-	// 				// 	},
-	// 				// 	{
-	// 				// 	  urls: "turns:global.relay.metered.ca:443?transport=tcp",
-	// 				// 	  username: "3e1062646b1d379aae1703ee",
-	// 				// 	  credential: "VQtqDLm0SITNhgQ2",
-	// 				// 	},
-	// 				// ],
-	// 			// }
-	// 		});
-	// 		p.on("signal", async (data) => {
-	// 			console.log("SIGNAL", data);
-	// 			const response = await fetch(`${import.meta.env.VITE_BASE_URL}/pose`, {
-	// 				method: "POST",
-	// 				headers: { "Content-Type": "application/json" },
-	// 				body: JSON.stringify(data),
-	// 			});
-	// 			const answer = await response.json();
-	// 			console.log(answer);
+			p.on("error", (err) => {
+				console.log("Error", err);
+			});
 
-	// 			p.signal(answer);
-	// 		});
+			p.on('iceStateChange', (state) => {
+				console.log('ICE state changed:', state);
+				}
+			);
 
-	// 		p.on("stream", (remoteStream) => {
-	// 			if (videoRef.current) {
-	// 				videoRef.current.srcObject = remoteStream;
-	// 			}
-	// 		});
+			setPeer(p);
+		};
 
-	// 		p.on("error", (err) => {
-	// 			console.log("Error", err);
-	// 		});
-
-	// 		p.on('iceStateChange', (state) => {
-	// 			console.log('ICE state changed:', state);
-	// 			}
-	// 		);
-
-	// 		setPeer(p);
-	// 	};
-
-	// 	startWebRTC();
-	// 	return () => {
-	// 		peer?.destroy();
-	// 	};
-	// }, []);
+		startWebRTC();
+		return () => {
+			peer?.destroy();
+		};
+	}, []);
 
 	return (
 		<div style={{
@@ -124,7 +98,7 @@ const PoseEstimation = () => {
 				playsInline
 				style={{ width: "640px", height: "480px" }}
 			/>
-			<button onClick={startConnection}>click here</button>
+			{/* <button onClick={startConnection}>click here</button> */}
 		</div>
 	);
 };
