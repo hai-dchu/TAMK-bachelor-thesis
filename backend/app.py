@@ -6,6 +6,10 @@ from ultralytics import YOLO
 import av
 import cv2
 
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 model = YOLO("yolo11n-pose.pt")
 test_img = cv2.imread('./test.jpg') # np.zeros((640, 480, 3), dtype=np.uint8)  # Empty black image
 test_result = model(test_img)
@@ -116,7 +120,33 @@ def default_endpoint():
 async def handle_offer(offer: dict):
     # offer = request.json['sdp']
     try:
-        pc = RTCPeerConnection()
+        pc = RTCPeerConnection(configuration={
+            "iceServers": [
+      {
+        "urls": "stun:stun.relay.metered.ca:80",
+      },
+      {
+        "urls": "turn:standard.relay.metered.ca:80",
+        "username": os.getenv("TURN_SERVER_USERNAME"),
+        "credential": os.getenv("TURN_SERVER_CREDENTIAL"),
+      },
+      {
+        "urls": "turn:standard.relay.metered.ca:80?transport=tcp",
+        "username": os.getenv("TURN_SERVER_USERNAME"),
+        "credential": os.getenv("TURN_SERVER_CREDENTIAL"),
+      },
+      {
+        "urls": "turn:standard.relay.metered.ca:443",
+        "username": os.getenv("TURN_SERVER_USERNAME"),
+        "credential": os.getenv("TURN_SERVER_CREDENTIAL"),
+      },
+      {
+        "urls": "turns:standard.relay.metered.ca:443?transport=tcp",
+        "username": os.getenv("TURN_SERVER_USERNAME"),
+        "credential": os.getenv("TURN_SERVER_CREDENTIAL"),
+      },
+  ]
+        })
 
         @pc.on('track')
         def on_track(track):

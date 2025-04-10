@@ -34,12 +34,17 @@ const PoseEstimation = () => {
 			const stream = await navigator.mediaDevices.getUserMedia({ video: true });
 
 			if (webcamRef.current) webcamRef.current.srcObject = stream;
+			const response =
+				await fetch("https://bghach-thesis.metered.live/api/v1/turn/credentials?apiKey=87b6b7f007fcbc21c0509ed6f3ddd1331c3b");
 
+			// Saving the response in the iceServers array
+			const iceServers = await response.json();
 
 			const p = new SimplePeer({
 				initiator: true,
 				trickle: false,
 				stream: stream,
+				iceServers: iceServers,
 			});
 
 			p.on("signal", async (data) => {
@@ -67,7 +72,7 @@ const PoseEstimation = () => {
 
 			p.on('iceStateChange', (state) => {
 				console.log('ICE state changed:', state);
-				}
+			}
 			);
 
 			setPeer(p);
