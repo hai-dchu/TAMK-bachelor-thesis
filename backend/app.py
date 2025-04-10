@@ -17,9 +17,11 @@ else:
 class PoseRecTrack(MediaStreamTrack):
     kind = 'video'
 
-    def __init__(self, track):
+    def __init__(self, track, frame_rate=5):
         super().__init__()
         self.track = track
+        self.frame_rate = frame_rate
+        self.keypoints = []
 
     # async def recv(self):
     #     frame = await self.track.recv()
@@ -44,9 +46,9 @@ class PoseRecTrack(MediaStreamTrack):
             feed = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
             results = model(feed, verbose=False)
-            keypoints = results[0].keypoints.xy.cpu().numpy() if results[0].keypoints else []
+            self.keypoints = results[0].keypoints.xy.cpu().numpy() if results[0].keypoints else []
 
-        for kp in keypoints:
+        for kp in self.keypoints:
             if len(kp):
                 is_left_ear_in = not (kp[3][0] == 0 and kp[3][1] == 0)
                 is_right_ear_in = not (kp[4][0] == 0 and kp[4][1] == 0)
