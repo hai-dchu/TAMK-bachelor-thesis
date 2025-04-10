@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from aiortc import RTCPeerConnection, MediaStreamTrack, RTCSessionDescription
+from aiortc import RTCPeerConnection, MediaStreamTrack, RTCSessionDescription, RTCConfiguration, RTCIceServer
 import asyncio
 from ultralytics import YOLO
 import av
@@ -120,33 +120,32 @@ def default_endpoint():
 async def handle_offer(offer: dict):
     # offer = request.json['sdp']
     try:
-        pc = RTCPeerConnection(configuration={
-            "iceServers": [
-      {
-        "urls": "stun:stun.relay.metered.ca:80",
-      },
-      {
-        "urls": "turn:standard.relay.metered.ca:80",
-        "username": os.getenv("TURN_SERVER_USERNAME"),
-        "credential": os.getenv("TURN_SERVER_CREDENTIAL"),
-      },
-      {
-        "urls": "turn:standard.relay.metered.ca:80?transport=tcp",
-        "username": os.getenv("TURN_SERVER_USERNAME"),
-        "credential": os.getenv("TURN_SERVER_CREDENTIAL"),
-      },
-      {
-        "urls": "turn:standard.relay.metered.ca:443",
-        "username": os.getenv("TURN_SERVER_USERNAME"),
-        "credential": os.getenv("TURN_SERVER_CREDENTIAL"),
-      },
-      {
-        "urls": "turns:standard.relay.metered.ca:443?transport=tcp",
-        "username": os.getenv("TURN_SERVER_USERNAME"),
-        "credential": os.getenv("TURN_SERVER_CREDENTIAL"),
-      },
-  ]
-        })
+        config = RTCConfiguration(iceServers=[
+                RTCIceServer(
+                    urls="stun:stun.relay.metered.ca:80",
+                ),
+                RTCIceServer(
+                    urls="turn:standard.relay.metered.ca:80",
+                    username=os.getenv("TURN_SERVER_USERNAME"),
+                    credential=os.getenv("TURN_SERVER_CREDENTIAL"),
+                ),
+                RTCIceServer(
+                    urls="turn:standard.relay.metered.ca:80?transport=tcp",
+                    username=os.getenv("TURN_SERVER_USERNAME"),
+                    credential=os.getenv("TURN_SERVER_CREDENTIAL"),
+                ),
+                RTCIceServer(
+                    urls="turn:standard.relay.metered.ca:443",
+                    username=os.getenv("TURN_SERVER_USERNAME"),
+                    credential=os.getenv("TURN_SERVER_CREDENTIAL"),
+                ),
+                RTCIceServer(
+                    urls="turns:standard.relay.metered.ca:443?transport=tcp",
+                    username=os.getenv("TURN_SERVER_USERNAME"),
+                    credential=os.getenv("TURN_SERVER_CREDENTIAL"),
+                ),
+        ])
+        pc = RTCPeerConnection(configuration=config)
 
         @pc.on('track')
         def on_track(track):
